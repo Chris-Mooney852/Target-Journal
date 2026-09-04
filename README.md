@@ -2,6 +2,9 @@
 
 A modern, native iOS app engineered in **SwiftUI**, **SwiftData**, and **Swift 6** designed specifically for journaling in your target language (**Simplified Chinese** / HSK 1–9) with AI-powered language evaluation via **DeepSeek API**.
 
+> [!NOTE]
+> TargetJournal currently only supports **Simplified Chinese** and **DeepSeek**, as that is what I use personally for my own language learning. However, the app is architected with a modular, pluggable LLM protocol—other languages and LLM providers (OpenAI, Claude, Gemini, etc.) can be added upon request! Feel free to open an issue or pull request.
+
 ---
 
 ## ✨ Features
