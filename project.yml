@@ -1,0 +1,46 @@
+name: TargetJournal
+options:
+  bundleIdPrefix: com.targetjournal
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGNING_ALLOWED: NO
+    CODE_SIGNING_REQUIRED: NO
+    SWIFT_STRICT_CONCURRENCY: complete
+
+targets:
+  TargetJournal:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: TargetJournal
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.targetjournal.app
+        INFOPLIST_KEY_CFBundleDisplayName: "TargetJournal"
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        GENERATE_INFOPLIST_FILE: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+
+  TargetJournalTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: TargetJournalTests
+    dependencies:
+      - target: TargetJournal
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.targetjournal.tests
