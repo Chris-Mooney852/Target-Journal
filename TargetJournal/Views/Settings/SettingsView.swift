@@ -108,12 +108,22 @@ public struct SettingsView: View {
             
             // App Info
             Section("About") {
-                HStack {
-                    Text("Version")
-                    Spacer()
-                    Text("1.0.0 (Build 1)")
-                        .foregroundStyle(.secondary)
+                HStack(spacing: 14) {
+                    Image("AppLogo")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 48, height: 48)
+                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("TargetJournal")
+                            .font(.headline)
+                        Text("Version 1.0.0 (Build 1)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
+                .padding(.vertical, 4)
                 
                 HStack {
                     Text("Architecture")
