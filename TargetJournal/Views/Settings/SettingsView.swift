@@ -24,22 +24,15 @@ public struct SettingsView: View {
             Section("Language & Proficiency") {
                 Picker("Target Language", selection: $userProfile.targetLanguageRaw) {
                     ForEach(TargetLanguage.allCases) { lang in
-                        HStack {
-                            Text(lang.flagEmoji)
-                            Text(lang.displayName)
-                        }
-                        .tag(lang.rawValue)
+                        Text("\(lang.flagEmoji)  \(lang.displayName) (\(lang.nativeName))")
+                            .tag(lang.rawValue)
                     }
                 }
                 
                 Picker("Proficiency Level", selection: $userProfile.currentHSKLevelRaw) {
                     ForEach(userProfile.targetLanguage.supportedLevels) { level in
-                        HStack {
-                            Text(level.title)
-                            Text("(\(level.proficiencyTier))")
-                                .foregroundStyle(.secondary)
-                        }
-                        .tag(level.rawValue)
+                        Text("\(level.title) — \(level.proficiencyTier)")
+                            .tag(level.rawValue)
                     }
                 }
                 
