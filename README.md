@@ -25,6 +25,18 @@ A modern, native iOS app engineered in **SwiftUI**, **SwiftData**, and **Swift 6
 
 ---
 
+## 📱 Screenshots
+
+<div align="center">
+
+| Home Timeline | Markdown & WYSIWYG Editor | AI Tutor Analysis |
+| :---: | :---: | :---: |
+| <img src="docs/screenshots/home-screen.png" width="280" alt="Home Screen" /> | <img src="docs/screenshots/note-edit-screen.png" width="280" alt="Note Edit Screen" /> | <img src="docs/screenshots/feedback.png" width="280" alt="AI Feedback" /> |
+
+</div>
+
+---
+
 ## 🏗️ Architecture
 
 ```
