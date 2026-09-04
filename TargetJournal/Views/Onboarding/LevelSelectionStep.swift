@@ -23,7 +23,7 @@ public struct LevelSelectionStep: View {
             
             ScrollView {
                 VStack(spacing: 10) {
-                    ForEach(HSKLevel.allCases) { level in
+                    ForEach(language.supportedLevels) { level in
                         Button(action: { selectedLevel = level }) {
                             HStack(alignment: .top, spacing: 12) {
                                 Circle()
@@ -80,6 +80,16 @@ public struct LevelSelectionStep: View {
                         .buttonStyle(.plain)
                     }
                 }
+            }
+        }
+        .onAppear {
+            if !language.supportedLevels.contains(selectedLevel) {
+                selectedLevel = language.defaultLevel
+            }
+        }
+        .onChange(of: language) { _, newLanguage in
+            if !newLanguage.supportedLevels.contains(selectedLevel) {
+                selectedLevel = newLanguage.defaultLevel
             }
         }
     }

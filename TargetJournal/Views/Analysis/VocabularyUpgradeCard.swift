@@ -16,9 +16,11 @@ public struct VocabularyUpgradeCard: View {
                     .fontWeight(.bold)
                     .foregroundStyle(.primary)
                 
-                Text(item.pinyin)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                if !item.pinyin.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Text(item.pinyin)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
                 
                 Spacer()
                 

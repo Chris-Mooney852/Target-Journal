@@ -1,30 +1,39 @@
-# TargetJournal 🇨🇳 ✍️
+# TargetJournal 🌍 ✍️
 
-A modern, native iOS app engineered in **SwiftUI**, **SwiftData**, and **Swift 6** designed specifically for journaling in your target language (**Simplified Chinese** / HSK 1–9) with AI-powered language evaluation via **DeepSeek API**.
-
-> [!NOTE]
-> TargetJournal currently only supports **Simplified Chinese** and **DeepSeek**, as that is what I use personally for my own language learning. However, the app is architected with a modular, pluggable LLM protocol—other languages and LLM providers (OpenAI, Claude, Gemini, etc.) can be added upon request! Feel free to open an issue or pull request.
+A modern, native iOS app engineered in **SwiftUI**, **SwiftData**, and **Swift 6** designed specifically for journaling in your target language with AI-powered language evaluation and personalized tutoring across **10 languages** and **5 LLM providers**.
 
 ---
 
 ## ✨ Features
 
-- 🇨🇳 **Simplified Chinese & HSK Calibration**: Configure proficiency levels from **HSK 1 (Beginner)** through **HSK 9 (Mastery)**.
-- 📝 **Hybrid Markdown & WYSIWYG Editor**:
-  - Live preview with CJK line-height formatting.
-  - One-tap Chinese punctuation accessory bar (`，`, `。`, `！`, `？`, `“”`, `《》`, `「」`, `——`).
-  - Standard Markdown quick-insert bar (headings, bold, lists, quotes, checkboxes).
-- 🤖 **AI Language Critique (DeepSeek)**:
-  - Supports `deepseek-chat` (fast) and `deepseek-reasoner` (deep chain-of-thought analysis).
-  - Fluency and grammar scoring calibrated to the user's selected HSK level.
-  - Detailed grammar corrections with categorized badges and explanations.
-  - Level-up vocabulary recommendations with Pinyin, English translations, and example sentences.
+- 🌍 **Multi-Language & Level Calibration**:
+  - 🇨🇳 **Simplified Chinese** (HSK 1–9)
+  - 🇹🇼 **Traditional Chinese** (TOCFL / HSK)
+  - 🇯🇵 **Japanese** (JLPT N5–N1)
+  - 🇰🇷 **Korean** (TOPIK 1–6)
+  - 🇪🇸 **Spanish** (CEFR A1–C2)
+  - 🇫🇷 **French** (CEFR A1–C2)
+  - 🇩🇪 **German** (CEFR A1–C2)
+  - 🇮🇹 **Italian** (CEFR A1–C2)
+  - 🇧🇷 **Portuguese** (CEFR A1–C2)
+  - 🇷🇺 **Russian** (CEFR / TORFL A1–C2)
+- 🤖 **Multi-Provider AI Language Critique**:
+  - **DeepSeek** (`deepseek-chat`, `deepseek-reasoner`)
+  - **OpenAI** (`gpt-4o`, `gpt-4o-mini`, `o3-mini`, `gpt-4.5-preview`)
+  - **Anthropic Claude** (`claude-3-7-sonnet-20250219`, `claude-3-5-sonnet`, `claude-3-5-haiku`)
+  - **Google Gemini** (`gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-2.0-flash`)
+  - **Custom / Local Ollama & LM Studio** (`qwen2.5`, `llama3.3`, `mistral-small`, etc.)
+  - Fluency & grammar scoring calibrated to the user's proficiency level.
+  - Detailed grammar corrections with categorized rule badges and explanations.
+  - Level-up vocabulary recommendations with pronunciation, translations, and context notes.
   - Side-by-side original vs. polished native version comparison with one-tap clipboard copy.
+- 📝 **Hybrid Markdown & WYSIWYG Editor**:
+  - Live preview with CJK & international line-height typography.
+  - Dedicated punctuation accessory bar for CJK and standard formatting.
+  - Standard Markdown quick-insert bar (headings, bold, lists, quotes, checkboxes).
 - 🔒 **Local & Secure**:
-  - DeepSeek API key stored securely in **Apple Keychain**.
+  - All API keys stored securely in isolated **Apple Keychain** accounts.
   - All journal entries persisted on-device using **SwiftData**.
-- 🧩 **Pluggable LLM Architecture**:
-  - Conforms to the `LLMService` protocol to easily drop in additional models (Claude, OpenAI, Gemini, Local LLMs) in the future.
 
 ---
 

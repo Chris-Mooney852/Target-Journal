@@ -33,7 +33,7 @@ public struct SettingsView: View {
                 }
                 
                 Picker("Proficiency Level", selection: $userProfile.currentHSKLevelRaw) {
-                    ForEach(HSKLevel.allCases) { level in
+                    ForEach(userProfile.targetLanguage.supportedLevels) { level in
                         HStack {
                             Text(level.title)
                             Text("(\(level.proficiencyTier))")
@@ -158,6 +158,12 @@ public struct SettingsView: View {
         }
         .onChange(of: userProfile.preferredLLMProvider) { _, _ in
             loadKeyForCurrentProvider()
+        }
+        .onChange(of: userProfile.targetLanguageRaw) { _, newRaw in
+            let lang = TargetLanguage(rawValue: newRaw) ?? .simplifiedChinese
+            if !lang.supportedLevels.map({ $0.rawValue }).contains(userProfile.currentHSKLevelRaw) {
+                userProfile.currentHSKLevel = lang.defaultLevel
+            }
         }
         .onDisappear {
             saveSettings()

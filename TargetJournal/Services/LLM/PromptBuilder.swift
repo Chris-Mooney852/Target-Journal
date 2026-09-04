@@ -18,9 +18,9 @@ public struct PromptBuilder: Sendable {
 
         Your objective:
         1. Analyze the student's journal entry written in \(targetLang).
-        2. Identify grammatical errors, awkward collocations, incorrect measure words, wrong word order, or unnatural phrasing.
+        2. Identify grammatical errors, awkward collocations, incorrect word order, gender/case/conjugation mistakes, unnatural phrasing, or spelling/character mistakes.
         3. Explain each correction clearly and concisely in \(nativeLang), referencing \(levelCode) and adjacent grammar concepts without using overly dry, academic jargon.
-        4. Recommend 2 to 4 high-yield vocabulary words or idioms at the learner's current level or one step above (e.g. if HSK 2, suggest HSK 3 words) that would elevate their journal.
+        4. Recommend 2 to 4 high-yield vocabulary words, idioms, or collocations at the learner's current level or one step above that would elevate their journal.
         5. Provide a polished, natural-sounding version in \(targetLang) preserving the user's authentic voice.
         6. Offer an overall fluency score (0-100) and an encouraging summary praising what they did well.
 
@@ -35,25 +35,25 @@ public struct PromptBuilder: Sendable {
               "original": "exact error phrase in \(targetLang)",
               "corrected": "corrected phrase in \(targetLang)",
               "explanation": "Clear explanation in \(nativeLang) why this change was made and the grammar rule.",
-              "category": "Grammar" | "Vocabulary" | "Word Order" | "Natural Phrasing" | "Measure Word" | "Punctuation",
-              "ruleTag": "e.g. 把-construction / Time Word Placement / 了 aspect particle"
+              "category": "Grammar" | "Vocabulary" | "Word Order" | "Natural Phrasing" | "Spelling / Punctuation",
+              "ruleTag": "Brief name of the rule, e.g. Subjunctive Mood / Particle usage / Verb Conjugation"
             }
           ],
           "vocabularyRecommendations": [
             {
-              "hanzi": "生词",
-              "pinyin": "shēngcí",
-              "english": "new word / vocabulary",
-              "hskLevel": "HSK 2",
-              "exampleSentence": "完整的例句带拼音和翻译。",
+              "hanzi": "word / phrase in \(targetLang)",
+              "pinyin": "pronunciation / reading / furigana (or empty string if not applicable)",
+              "english": "definition / translation in \(nativeLang)",
+              "hskLevel": "\(levelCode)",
+              "exampleSentence": "Natural example sentence in \(targetLang) with translation.",
               "contextNote": "Why this word fits their journal theme."
             }
           ],
           "grammarPatterns": [
             {
-              "pattern": "虽然……但是……",
-              "explanation": "Expresses concession: 'Although... but...'",
-              "level": "HSK 2"
+              "pattern": "Key grammatical pattern in \(targetLang)",
+              "explanation": "Explanation of pattern in \(nativeLang)",
+              "level": "\(levelCode)"
             }
           ],
           "polishedVersion": "The entire journal entry rewritten naturally in native \(targetLang)."

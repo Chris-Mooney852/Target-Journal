@@ -29,11 +29,28 @@ final class ModelTests: XCTestCase {
     }
     
     func testTargetLanguageProperties() {
+        XCTAssertEqual(TargetLanguage.allCases.count, 10)
+        
         let chinese = TargetLanguage.simplifiedChinese
         XCTAssertEqual(chinese.rawValue, "zh_Hans")
         XCTAssertEqual(chinese.displayName, "Simplified Chinese")
         XCTAssertEqual(chinese.nativeName, "简体中文")
         XCTAssertEqual(chinese.flagEmoji, "🇨🇳")
+        XCTAssertEqual(chinese.defaultLevel, .hsk1)
+        
+        let japanese = TargetLanguage.japanese
+        XCTAssertEqual(japanese.displayName, "Japanese")
+        XCTAssertEqual(japanese.nativeName, "日本語")
+        XCTAssertEqual(japanese.flagEmoji, "🇯🇵")
+        XCTAssertEqual(japanese.defaultLevel, .jlptN5)
+        XCTAssertEqual(japanese.supportedLevels.count, 5)
+        
+        let spanish = TargetLanguage.spanish
+        XCTAssertEqual(spanish.displayName, "Spanish")
+        XCTAssertEqual(spanish.nativeName, "Español")
+        XCTAssertEqual(spanish.flagEmoji, "🇪🇸")
+        XCTAssertEqual(spanish.defaultLevel, .cefrA1)
+        XCTAssertEqual(spanish.supportedLevels.count, 6)
     }
     
     func testHSKLevelProperties() {
@@ -44,7 +61,13 @@ final class ModelTests: XCTestCase {
         XCTAssertFalse(hsk3.description.isEmpty)
         XCTAssertFalse(hsk3.badgeColorHex.isEmpty)
         
-        XCTAssertEqual(HSKLevel.allCases.count, 7)
+        let jlptN2 = HSKLevel.jlptN2
+        XCTAssertEqual(jlptN2.title, "JLPT N2")
+        XCTAssertEqual(jlptN2.proficiencyTier, "Upper Intermediate")
+        
+        let cefrB2 = HSKLevel.cefrB2
+        XCTAssertEqual(cefrB2.title, "CEFR B2")
+        XCTAssertEqual(cefrB2.proficiencyTier, "Upper Intermediate")
     }
     
     @MainActor
