@@ -11,7 +11,7 @@ public struct JournalRowView: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .center) {
-                Text(entry.title.isEmpty ? "Untitled Entry" : entry.title)
+                Text(entry.title.isEmpty ? JournalEntry.formattedDateTitle(for: entry.date) : entry.title)
                     .font(.headline)
                     .fontWeight(.semibold)
                     .foregroundStyle(.primary)

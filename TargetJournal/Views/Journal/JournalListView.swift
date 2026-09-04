@@ -19,21 +19,7 @@ public struct JournalListView: View {
     public var body: some View {
         NavigationStack {
             List {
-                // Header Stats Section
                 Section {
-                    StreakHeaderView(
-                        userProfile: userProfile,
-                        totalEntries: entries.count,
-                        totalCharacters: totalCharactersWritten
-                    )
-                    .listRowInsets(EdgeInsets())
-                    #if os(iOS)
-                    .listRowBackground(Color.clear)
-                    #endif
-                }
-                
-                // Entries Section
-                Section("Journal Entries") {
                     if filteredEntries.isEmpty {
                         emptyPlaceholder
                     } else {
@@ -50,6 +36,21 @@ public struct JournalListView: View {
                             }
                         }
                     }
+                } header: {
+                    VStack(alignment: .leading, spacing: 14) {
+                        StreakHeaderView(
+                            userProfile: userProfile,
+                            totalEntries: entries.count,
+                            totalCharacters: totalCharactersWritten
+                        )
+                        
+                        Text("Journal Entries")
+                            .font(.footnote)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.secondary)
+                    }
+                    .textCase(nil)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 6, trailing: 0))
                 }
             }
             #if os(iOS)
@@ -137,10 +138,11 @@ public struct JournalListView: View {
     }
     
     private func createNewEntry() {
+        let now = Date()
         let newEntry = JournalEntry(
-            title: "",
+            title: JournalEntry.formattedDateTitle(for: now),
             rawMarkdown: "",
-            date: Date(),
+            date: now,
             targetLanguage: userProfile.targetLanguage,
             recordedHSKLevel: userProfile.currentHSKLevel
         )

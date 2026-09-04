@@ -80,6 +80,17 @@ public struct SettingsView: View {
                             .foregroundStyle(isKeyValid ? .green : .red)
                     }
                 }
+                
+                if !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Button(action: {
+                        saveSettings()
+                        testStatus = "Saved to Keychain ✓"
+                        isKeyValid = true
+                    }) {
+                        Label("Save Key", systemImage: "square.and.arrow.down")
+                    }
+                    .font(.footnote)
+                }
             }
             
             // Advanced Model Settings
@@ -129,17 +140,23 @@ public struct SettingsView: View {
                 apiKey = storedKey
             }
         }
+        .onDisappear {
+            saveSettings()
+        }
     }
     
     private func saveSettings() {
-        if !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            try? KeychainHelper.shared.saveDeepSeekKey(apiKey)
+        let trimmedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        do {
+            try KeychainHelper.shared.saveDeepSeekKey(trimmedKey)
+            try modelContext.save()
+        } catch {
+            print("[SettingsView] Failed to save settings: \(error)")
         }
-        try? modelContext.save()
     }
     
     private func testConnection() {
-        let keyToTest = apiKey
+        let keyToTest = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         isTestingKey = true
         testStatus = nil
         
@@ -152,6 +169,9 @@ public struct SettingsView: View {
                     self.isTestingKey = false
                     self.isKeyValid = success
                     self.testStatus = "Valid Key ✓"
+                    if success {
+                        try? KeychainHelper.shared.saveDeepSeekKey(keyToTest)
+                    }
                 }
             } catch {
                 await MainActor.run {

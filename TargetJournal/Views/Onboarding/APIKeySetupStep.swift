@@ -86,7 +86,7 @@ public struct APIKeySetupStep: View {
     }
     
     private func testConnection() {
-        let keyToTest = apiKey
+        let keyToTest = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         isTesting = true
         testStatus = nil
         
@@ -100,6 +100,9 @@ public struct APIKeySetupStep: View {
                     self.isSuccess = success
                     self.isValidated = success
                     self.testStatus = "Connected successfully!"
+                    if success {
+                        try? KeychainHelper.shared.saveDeepSeekKey(keyToTest)
+                    }
                 }
             } catch {
                 await MainActor.run {

@@ -29,14 +29,22 @@ public final class JournalEntry {
         tags: [String] = []
     ) {
         self.id = id
-        self.title = title
-        self.rawMarkdown = rawMarkdown
         self.date = date
+        self.title = title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? JournalEntry.formattedDateTitle(for: date) : title
+        self.rawMarkdown = rawMarkdown
         self.createdAt = Date()
         self.updatedAt = Date()
         self.targetLanguageRaw = targetLanguage.rawValue
         self.recordedHSKLevelRaw = recordedHSKLevel.rawValue
         self.tags = tags
+    }
+    
+    /// Generates a formatted date title in "DD-MM-YYYY" format.
+    public static func formattedDateTitle(for date: Date = Date()) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd-MM-yyyy"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter.string(from: date)
     }
     
     public var targetLanguage: TargetLanguage {

@@ -48,6 +48,33 @@ final class ModelTests: XCTestCase {
     }
     
     @MainActor
+    func testJournalEntryTitleAutoFillsWithDateFormat() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        var components = DateComponents()
+        components.year = 2026
+        components.month = 9
+        components.day = 4
+        components.hour = 12
+        let fixedDate = calendar.date(from: components)!
+        
+        let expectedTitle = JournalEntry.formattedDateTitle(for: fixedDate)
+        XCTAssertEqual(expectedTitle, "04-09-2026")
+        
+        let entryWithEmptyTitle = JournalEntry(
+            title: "",
+            date: fixedDate
+        )
+        XCTAssertEqual(entryWithEmptyTitle.title, "04-09-2026")
+        
+        let entryWithCustomTitle = JournalEntry(
+            title: "Custom Title",
+            date: fixedDate
+        )
+        XCTAssertEqual(entryWithCustomTitle.title, "Custom Title")
+    }
+    
+    @MainActor
     func testJournalEntryAndAnalysisReportPersistence() throws {
         let entry = JournalEntry(
             title: "今天的天气很好",

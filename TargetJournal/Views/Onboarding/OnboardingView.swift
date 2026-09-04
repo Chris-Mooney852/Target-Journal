@@ -99,11 +99,13 @@ public struct OnboardingView: View {
             userProfile.currentHSKLevel = selectedLevel
             userProfile.isOnboardingCompleted = true
             
-            if !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                try? KeychainHelper.shared.saveDeepSeekKey(apiKey)
+            let trimmedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+            do {
+                try KeychainHelper.shared.saveDeepSeekKey(trimmedKey)
+                try modelContext.save()
+            } catch {
+                print("[OnboardingView] Error saving API key: \(error)")
             }
-            
-            try? modelContext.save()
             onComplete()
         }
     }

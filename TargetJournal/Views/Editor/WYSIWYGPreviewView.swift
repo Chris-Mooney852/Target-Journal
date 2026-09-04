@@ -7,70 +7,71 @@ public struct WYSIWYGPreviewView: View {
     public let targetLanguage: TargetLanguage
     public let level: HSKLevel
     public let date: Date
+    public let isScrollable: Bool
     
     public init(
-        title: String,
+        title: String = "",
         markdown: String,
         targetLanguage: TargetLanguage = .simplifiedChinese,
         level: HSKLevel = .hsk1,
-        date: Date = Date()
+        date: Date = Date(),
+        isScrollable: Bool = true
     ) {
         self.title = title
         self.markdown = markdown
         self.targetLanguage = targetLanguage
         self.level = level
         self.date = date
+        self.isScrollable = isScrollable
     }
     
     public var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                // Header Meta
+        if isScrollable {
+            ScrollView {
+                content
+                    .padding(20)
+            }
+            #if os(iOS)
+            .background(Color(.systemGroupedBackground))
+            #else
+            .background(Color(.windowBackgroundColor))
+            #endif
+        } else {
+            content
+        }
+    }
+    
+    @ViewBuilder
+    private var content: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            if !title.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        HSKBadge(level: level, style: .standard)
-                        
-                        Text(date.formatted(date: .abbreviated, time: .shortened))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        
-                        Spacer()
-                    }
+                    Text(title)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.primary)
                     
-                    if !title.isEmpty {
-                        Text(title)
-                            .font(.title)
-                            .fontWeight(.bold)
-                            .foregroundStyle(.primary)
-                    }
-                }
-                
-                Divider()
-                
-                // Formatted Content
-                if markdown.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    VStack(spacing: 12) {
-                        Image(systemName: "pencil.and.scribble")
-                            .font(.system(size: 40))
-                            .foregroundStyle(.tertiary)
-                        Text("No notes written yet. Switch to Edit mode to start journaling in \(targetLanguage.displayName).")
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 40)
-                } else {
-                    MarkdownContentRenderer(markdown: markdown)
+                    Divider()
                 }
             }
-            .padding(20)
+            
+            // Formatted Content
+            if markdown.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "pencil.and.scribble")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.tertiary)
+                    Text("No notes written yet. Switch to Write mode to start journaling in \(targetLanguage.displayName).")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
+            } else {
+                MarkdownContentRenderer(markdown: markdown)
+            }
         }
-        #if os(iOS)
-        .background(Color(.systemGroupedBackground))
-        #else
-        .background(Color(.windowBackgroundColor))
-        #endif
     }
 }
 

@@ -43,7 +43,8 @@ public struct EntryDetailView: View {
                     markdown: entry.rawMarkdown,
                     targetLanguage: entry.targetLanguage,
                     level: entry.recordedHSKLevel,
-                    date: entry.date
+                    date: entry.date,
+                    isScrollable: false
                 )
                 
                 // AI Feedback Section
