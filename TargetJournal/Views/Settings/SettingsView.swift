@@ -195,10 +195,17 @@ public struct SettingsView: View {
         Task {
             do {
                 let success = try await service.testConnection()
+                var balanceStr = ""
+                if success && service.supportsBalanceCheck {
+                    if let balance = try? await service.fetchBalance() {
+                        balanceStr = " (Balance: \(balance.formattedDisplay))"
+                    }
+                }
+                
                 await MainActor.run {
                     self.isTestingKey = false
                     self.isKeyValid = success
-                    self.testStatus = "Connected ✓"
+                    self.testStatus = "Connected ✓\(balanceStr)"
                     if success {
                         try? KeychainHelper.shared.saveKey(keyToTest, for: provider)
                     }

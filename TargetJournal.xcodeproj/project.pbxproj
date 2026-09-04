@@ -90,7 +90,7 @@
 		5286ABA4E6088CA381794853 /* MarkdownEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownEditorView.swift; sourceTree = "<group>"; };
 		531E84F8853EEA27EAC7DE39 /* LLMProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMProvider.swift; sourceTree = "<group>"; };
 		5663CE5D2A99D18682FF1FB6 /* LLMServiceRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMServiceRegistry.swift; sourceTree = "<group>"; };
-		5C1D58BB6B4519F69140B486 /* TargetJournal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TargetJournal.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5C1D58BB6B4519F69140B486 /* TargetJournal.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TargetJournal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		648D126F7D29788B11B4BA61 /* AnalysisReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisReport.swift; sourceTree = "<group>"; };
 		70F6198D4CE9C6C32852C2FE /* TargetJournalApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetJournalApp.swift; sourceTree = "<group>"; };
 		73F16CA0DA53D99BF5311BC8 /* AnalysisReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisReportView.swift; sourceTree = "<group>"; };
@@ -354,6 +354,8 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
 			};
 			buildConfigurationList = 38E12A82CC0374FBDC7F8913 /* Build configuration list for PBXProject "TargetJournal" */;
 			developmentRegion = en;
@@ -463,7 +465,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = B374A4SXA4;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = TargetJournal;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -486,7 +487,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = B374A4SXA4;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = TargetJournal;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

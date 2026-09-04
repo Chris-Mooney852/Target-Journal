@@ -83,6 +83,13 @@ public enum LLMProvider: String, CaseIterable, Identifiable, Codable, Sendable {
         }
     }
     
+    public var supportsBalanceCheck: Bool {
+        switch self {
+        case .deepSeek: return true
+        default: return false
+        }
+    }
+    
     public var iconSystemName: String {
         switch self {
         case .deepSeek: return "sparkles"

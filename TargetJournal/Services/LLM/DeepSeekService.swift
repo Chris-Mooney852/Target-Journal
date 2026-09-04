@@ -118,4 +118,54 @@ public final class DeepSeekService: LLMService, @unchecked Sendable {
         }
         return true
     }
+    
+    public var supportsBalanceCheck: Bool { true }
+    
+    public func fetchBalance() async throws -> LLMBalanceInfo? {
+        guard let apiKey = apiKeyProvider(), !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw LLMError.missingApiKey(provider: providerName)
+        }
+        
+        guard let url = URL(string: "https://api.deepseek.com/user/balance") else {
+            throw LLMError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        request.timeoutInterval = 15
+        
+        let (data, response) = try await urlSession.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+            let msg = String(data: data, encoding: .utf8) ?? "Failed to fetch balance"
+            throw LLMError.invalidResponse(statusCode: (response as? HTTPURLResponse)?.statusCode ?? 500, message: msg)
+        }
+        
+        struct DeepSeekBalanceResponse: Decodable {
+            let is_available: Bool?
+            let balance_infos: [BalanceItem]
+            
+            struct BalanceItem: Decodable {
+                let currency: String
+                let total_balance: String
+                let granted_balance: String?
+                let topped_up_balance: String?
+            }
+        }
+        
+        let decoded = try JSONDecoder().decode(DeepSeekBalanceResponse.self, from: data)
+        let isAvail = decoded.is_available ?? true
+        
+        let activeItem = decoded.balance_infos.first { (Double($0.total_balance) ?? 0) > 0 } ?? decoded.balance_infos.first
+        guard let item = activeItem else { return nil }
+        
+        return LLMBalanceInfo(
+            currency: item.currency,
+            totalBalance: item.total_balance,
+            grantedBalance: item.granted_balance,
+            toppedUpBalance: item.topped_up_balance,
+            isAvailable: isAvail
+        )
+    }
 }

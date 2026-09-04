@@ -221,4 +221,21 @@ final class LLMServiceTests: XCTestCase {
         let customService = LLMServiceRegistry.shared.service(for: profile)
         XCTAssertEqual(customService.providerName, "Custom / Ollama")
     }
+
+    func testLLMBalanceInfoFormatting() {
+        let cnyBalance = LLMBalanceInfo(currency: "CNY", totalBalance: "12.50", grantedBalance: "0.00", toppedUpBalance: "12.50", isAvailable: true)
+        XCTAssertEqual(cnyBalance.formattedDisplay, "¥12.50")
+        XCTAssertTrue(cnyBalance.isAvailable)
+        
+        let usdBalance = LLMBalanceInfo(currency: "USD", totalBalance: "5.00")
+        XCTAssertEqual(usdBalance.formattedDisplay, "$5.00")
+    }
+    
+    func testDeepSeekServiceSupportsBalanceCheck() {
+        let deepseekService = DeepSeekService()
+        XCTAssertTrue(deepseekService.supportsBalanceCheck)
+        
+        let openAIService = OpenAIService()
+        XCTAssertFalse(openAIService.supportsBalanceCheck)
+    }
 }
