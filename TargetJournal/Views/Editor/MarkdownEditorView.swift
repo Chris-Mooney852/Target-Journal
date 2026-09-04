@@ -210,15 +210,17 @@ public struct MarkdownEditorView: View {
                         overallScore: response.overallScore,
                         fluencySummary: response.fluencySummary,
                         encouragingFeedback: response.encouragingFeedback,
-                        corrections: response.corrections.map {
-                            GrammarCorrection(
-                                original: $0.original,
-                                corrected: $0.corrected,
-                                explanation: $0.explanation,
-                                category: CorrectionCategory(rawValue: $0.category) ?? .grammar,
-                                ruleTag: $0.ruleTag
-                            )
-                        },
+                        corrections: response.corrections
+                            .filter { $0.isValidCorrection }
+                            .map {
+                                GrammarCorrection(
+                                    original: $0.original,
+                                    corrected: $0.corrected,
+                                    explanation: $0.explanation,
+                                    category: CorrectionCategory(rawValue: $0.category) ?? .grammar,
+                                    ruleTag: $0.ruleTag
+                                )
+                            },
                         vocabularyRecommendations: response.vocabularyRecommendations.map {
                             VocabularyItem(
                                 hanzi: $0.hanzi,

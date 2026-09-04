@@ -58,10 +58,12 @@ public final class AnalysisReport {
     // Decoded accessors
     public var corrections: [GrammarCorrection] {
         get {
-            (try? JSONDecoder().decode([GrammarCorrection].self, from: correctionsData)) ?? []
+            let decoded = (try? JSONDecoder().decode([GrammarCorrection].self, from: correctionsData)) ?? []
+            return decoded.filter { $0.isValidCorrection }
         }
         set {
-            correctionsData = (try? JSONEncoder().encode(newValue)) ?? Data()
+            let valid = newValue.filter { $0.isValidCorrection }
+            correctionsData = (try? JSONEncoder().encode(valid)) ?? Data()
         }
     }
     
@@ -84,7 +86,8 @@ public final class AnalysisReport {
     }
     
     public func setCorrections(_ items: [GrammarCorrection]) {
-        self.correctionsData = (try? JSONEncoder().encode(items)) ?? Data()
+        let valid = items.filter { $0.isValidCorrection }
+        self.correctionsData = (try? JSONEncoder().encode(valid)) ?? Data()
     }
     
     public func setVocabulary(_ items: [VocabularyItem]) {

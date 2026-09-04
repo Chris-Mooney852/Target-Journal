@@ -123,10 +123,11 @@ final class ModelTests: XCTestCase {
             encouragingFeedback: "Keep up the great work!",
             corrections: [
                 GrammarCorrection(
-                    original: "我去公园散步了",
-                    corrected: "我去公园散步了",
-                    explanation: "Accurate sentence construction.",
-                    category: .grammar
+                    original: "我想去明天公园散步。",
+                    corrected: "我明天想去公园散步。",
+                    explanation: "Time words should be placed before or directly after the subject.",
+                    category: .wordOrder,
+                    ruleTag: "Time Word Position"
                 )
             ],
             vocabularyRecommendations: [
@@ -145,7 +146,7 @@ final class ModelTests: XCTestCase {
                     level: "HSK 1"
                 )
             ],
-            polishedVersion: "今天我去公园散步了。公园里的花真漂亮。"
+            polishedVersion: "今天我明天想去公园散步。公园里的花真漂亮。"
         )
         
         report.journalEntry = entry
@@ -157,6 +158,8 @@ final class ModelTests: XCTestCase {
         XCTAssertNotNil(entry.latestAnalysis)
         XCTAssertEqual(entry.latestAnalysis?.overallScore, 92)
         XCTAssertEqual(entry.latestAnalysis?.corrections.count, 1)
+        XCTAssertEqual(entry.latestAnalysis?.corrections.first?.original, "我想去明天公园散步。")
+        XCTAssertEqual(entry.latestAnalysis?.corrections.first?.corrected, "我明天想去公园散步。")
         XCTAssertEqual(entry.latestAnalysis?.vocabularyRecommendations.count, 1)
         XCTAssertEqual(entry.latestAnalysis?.vocabularyRecommendations.first?.hanzi, "风景")
     }
@@ -176,5 +179,92 @@ final class ModelTests: XCTestCase {
         XCTAssertEqual(profile.currentHSKLevel, .hsk3)
         XCTAssertEqual(profile.preferredLLMProvider, "DeepSeek")
         XCTAssertEqual(profile.deepSeekModel, "deepseek-chat")
+    }
+    
+    @MainActor
+    func testGrammarCorrectionFiltersNoChangeNeeded() throws {
+        // 1. Identical original and corrected
+        let identical = GrammarCorrection(
+            original: "我去公园散步了",
+            corrected: "我去公园散步了",
+            explanation: "No errors here.",
+            category: .grammar
+        )
+        XCTAssertFalse(identical.isValidCorrection)
+        
+        // 2. Corrected indicates no change needed
+        let noChange = GrammarCorrection(
+            original: "我喜欢看书",
+            corrected: "No change needed",
+            explanation: "The sentence is already natural.",
+            category: .grammar
+        )
+        XCTAssertFalse(noChange.isValidCorrection)
+        
+        let correctAsIs = GrammarCorrection(
+            original: "今天很好",
+            corrected: "Correct as is",
+            explanation: "Good job",
+            category: .grammar
+        )
+        XCTAssertFalse(correctAsIs.isValidCorrection)
+        
+        let chineseNoChange = GrammarCorrection(
+            original: "今天天气很好",
+            corrected: "无需修改",
+            explanation: "句子正确",
+            category: .grammar
+        )
+        XCTAssertFalse(chineseNoChange.isValidCorrection)
+        
+        // 3. Rule tag indicates no change needed
+        let ruleTagNoChange = GrammarCorrection(
+            original: "我爱学习",
+            corrected: "我爱学习。",
+            explanation: "Added period",
+            category: .punctuation,
+            ruleTag: "No change needed"
+        )
+        XCTAssertFalse(ruleTagNoChange.isValidCorrection)
+        
+        // 4. Valid correction
+        let valid = GrammarCorrection(
+            original: "我想去明天北京。",
+            corrected: "我明天想去北京。",
+            explanation: "Time word order issue",
+            category: .wordOrder,
+            ruleTag: "Word Order"
+        )
+        XCTAssertTrue(valid.isValidCorrection)
+    }
+    
+    @MainActor
+    func testAnalysisReportFiltersInvalidCorrectionsOnSetAndGet() throws {
+        let report = AnalysisReport(
+            corrections: [
+                GrammarCorrection(
+                    original: "我去公园",
+                    corrected: "我去公园",
+                    explanation: "Identical",
+                    category: .grammar
+                ),
+                GrammarCorrection(
+                    original: "我想去明天北京。",
+                    corrected: "我明天想去北京。",
+                    explanation: "Valid correction",
+                    category: .wordOrder
+                ),
+                GrammarCorrection(
+                    original: "天气很好",
+                    corrected: "No change needed",
+                    explanation: "Already correct",
+                    category: .grammar
+                )
+            ]
+        )
+        
+        XCTAssertEqual(report.corrections.count, 1)
+        XCTAssertEqual(report.corrections.first?.original, "我想去明天北京。")
+        XCTAssertEqual(report.corrections.first?.corrected, "我明天想去北京。")
     }
 }

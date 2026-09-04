@@ -24,6 +24,102 @@ public struct GrammarCorrection: Codable, Identifiable, Sendable, Hashable {
         self.category = category
         self.ruleTag = ruleTag
     }
+    
+    public var isValidCorrection: Bool {
+        GrammarCorrection.isMeaningful(
+            original: original,
+            corrected: corrected,
+            explanation: explanation,
+            ruleTag: ruleTag,
+            category: category.rawValue
+        )
+    }
+    
+    public static func isMeaningful(
+        original: String,
+        corrected: String,
+        explanation: String = "",
+        ruleTag: String? = nil,
+        category: String = ""
+    ) -> Bool {
+        let trimmedOriginal = original.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedCorrected = corrected.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        guard !trimmedOriginal.isEmpty, !trimmedCorrected.isEmpty else {
+            return false
+        }
+        
+        if trimmedOriginal == trimmedCorrected {
+            return false
+        }
+        
+        let noChangePhrases: Set<String> = [
+            "no change needed",
+            "no change",
+            "no changes needed",
+            "no changes",
+            "no correction needed",
+            "no correction",
+            "no corrections needed",
+            "no corrections",
+            "no error",
+            "no errors",
+            "no errors found",
+            "none",
+            "n/a",
+            "na",
+            "nil",
+            "null",
+            "correct as is",
+            "already correct",
+            "correct",
+            "looks good",
+            "all correct",
+            "perfect",
+            "无需修改",
+            "无修改",
+            "无需改动",
+            "没有错误",
+            "无错误",
+            "正确",
+            "无",
+            "无须修改",
+            "不需要修改"
+        ]
+        
+        let lowerCorrected = trimmedCorrected
+            .lowercased()
+            .trimmingCharacters(in: .punctuationCharacters.union(.whitespacesAndNewlines))
+        
+        if noChangePhrases.contains(lowerCorrected) {
+            return false
+        }
+        
+        let lowerOriginal = trimmedOriginal
+            .lowercased()
+            .trimmingCharacters(in: .punctuationCharacters.union(.whitespacesAndNewlines))
+        
+        if noChangePhrases.contains(lowerOriginal) {
+            return false
+        }
+        
+        if let rule = ruleTag?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased().trimmingCharacters(in: .punctuationCharacters.union(.whitespacesAndNewlines)),
+           noChangePhrases.contains(rule) {
+            return false
+        }
+        
+        let lowerCategory = category.trimmingCharacters(in: .whitespacesAndNewlines).lowercased().trimmingCharacters(in: .punctuationCharacters.union(.whitespacesAndNewlines))
+        if noChangePhrases.contains(lowerCategory) {
+            return false
+        }
+        
+        let lowerExplanation = explanation.trimmingCharacters(in: .whitespacesAndNewlines).lowercased().trimmingCharacters(in: .punctuationCharacters.union(.whitespacesAndNewlines))
+        if noChangePhrases.contains(lowerExplanation) {
+            return false
+        }
+        
+        return true
+    }
 }
 
 public enum CorrectionCategory: String, Codable, CaseIterable, Sendable {

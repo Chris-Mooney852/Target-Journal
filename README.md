@@ -74,3 +74,10 @@ swift test
 - **iOS 18+** / **iOS 26+** (designed for modern iPhone displays including iPhone 17 Pro Max)
 - **Xcode 16+ / 26+**
 - **Swift 6**
+
+---
+
+## 📄 License
+
+This project is licensed under the **GNU General Public License v3.0** - see the [LICENSE](LICENSE) file for details.
+

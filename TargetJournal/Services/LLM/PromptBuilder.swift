@@ -24,6 +24,12 @@ public struct PromptBuilder: Sendable {
         5. Provide a polished, natural-sounding version in \(targetLang) preserving the user's authentic voice.
         6. Offer an overall fluency score (0-100) and an encouraging summary praising what they did well.
 
+        CRITICAL CORRECTION RULES:
+        - The "corrections" list must ONLY contain items where an actual error exists and a genuine change is required.
+        - NEVER include items where "original" and "corrected" are identical or where no change is needed.
+        - NEVER output entries indicating "No change needed", "No change", "N/A", "Correct as is", or similar placeholder text.
+        - If there are no errors in the journal entry, you MUST set "corrections": [].
+
         CRITICAL OUTPUT FORMAT:
         You MUST respond ONLY with a strictly valid JSON object matching the following schema without any markdown formatting wrappers or conversational text outside the JSON:
         {

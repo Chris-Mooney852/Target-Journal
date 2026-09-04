@@ -58,6 +58,16 @@ public struct LLMCorrectionItem: Codable, Sendable {
     public let explanation: String
     public let category: String
     public let ruleTag: String?
+    
+    public var isValidCorrection: Bool {
+        GrammarCorrection.isMeaningful(
+            original: original,
+            corrected: corrected,
+            explanation: explanation,
+            ruleTag: ruleTag,
+            category: category
+        )
+    }
 }
 
 public struct LLMVocabularyItem: Codable, Sendable {
