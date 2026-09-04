@@ -10,6 +10,7 @@ public struct OnboardingView: View {
     @State private var currentStep: Int = 0
     @State private var selectedLanguage: TargetLanguage = .simplifiedChinese
     @State private var selectedLevel: HSKLevel = .hsk1
+    @State private var selectedProvider: LLMProvider = .deepSeek
     @State private var apiKey: String = ""
     @State private var isKeyValidated: Bool = false
     
@@ -42,7 +43,7 @@ public struct OnboardingView: View {
                         .tag(1)
                         .padding(.horizontal, 20)
                     
-                    APIKeySetupStep(apiKey: $apiKey, isValidated: $isKeyValidated)
+                    APIKeySetupStep(selectedProvider: $selectedProvider, apiKey: $apiKey, isValidated: $isKeyValidated)
                         .tag(2)
                         .padding(.horizontal, 20)
                 }
@@ -82,7 +83,8 @@ public struct OnboardingView: View {
         .onAppear {
             selectedLanguage = userProfile.targetLanguage
             selectedLevel = userProfile.currentHSKLevel
-            if let key = KeychainHelper.shared.getDeepSeekKey() {
+            selectedProvider = userProfile.llmProvider
+            if let key = KeychainHelper.shared.getKey(for: selectedProvider) {
                 apiKey = key
             }
         }
@@ -97,11 +99,12 @@ public struct OnboardingView: View {
             // Save settings
             userProfile.targetLanguage = selectedLanguage
             userProfile.currentHSKLevel = selectedLevel
+            userProfile.llmProvider = selectedProvider
             userProfile.isOnboardingCompleted = true
             
             let trimmedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
             do {
-                try KeychainHelper.shared.saveDeepSeekKey(trimmedKey)
+                try KeychainHelper.shared.saveKey(trimmedKey, for: selectedProvider)
                 try modelContext.save()
             } catch {
                 print("[OnboardingView] Error saving API key: \(error)")

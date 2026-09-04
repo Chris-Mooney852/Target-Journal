@@ -1,9 +1,9 @@
 import Foundation
 
-/// DeepSeek API client implementation conforming to LLMService.
-public final class DeepSeekService: LLMService, @unchecked Sendable {
-    public let providerId: String = "deepseek"
-    public let providerName: String = "DeepSeek"
+/// Google Gemini API client conforming to LLMService.
+public final class GeminiService: LLMService, @unchecked Sendable {
+    public let providerId: String = "gemini"
+    public let providerName: String = "Gemini"
     
     private let apiKeyProvider: @Sendable () -> String?
     private let baseURLString: String
@@ -11,10 +11,10 @@ public final class DeepSeekService: LLMService, @unchecked Sendable {
     private let urlSession: URLSession
     
     public init(
-        baseURLString: String = "https://api.deepseek.com/chat/completions",
-        modelName: String = "deepseek-chat",
+        baseURLString: String = "https://generativelanguage.googleapis.com/v1beta",
+        modelName: String = "gemini-2.5-flash",
         urlSession: URLSession = .shared,
-        apiKeyProvider: @escaping @Sendable () -> String? = { KeychainHelper.shared.getDeepSeekKey() }
+        apiKeyProvider: @escaping @Sendable () -> String? = { KeychainHelper.shared.getKey(for: .gemini) }
     ) {
         self.baseURLString = baseURLString
         self.modelName = modelName
@@ -27,31 +27,43 @@ public final class DeepSeekService: LLMService, @unchecked Sendable {
             throw LLMError.missingApiKey(provider: providerName)
         }
         
-        guard let url = URL(string: baseURLString) else {
+        let endpoint = "\(baseURLString)/models/\(modelName):generateContent?key=\(apiKey)"
+        guard let url = URL(string: endpoint) else {
             throw LLMError.invalidURL
         }
         
         let systemPrompt = PromptBuilder.buildSystemPrompt(for: request)
         let userPrompt = PromptBuilder.buildUserPrompt(for: request)
         
+        let combinedPrompt = """
+        System Instructions:
+        \(systemPrompt)
+        
+        User Request:
+        \(userPrompt)
+        """
+        
         let requestBody: [String: Any] = [
-            "model": modelName,
-            "messages": [
-                ["role": "system", "content": systemPrompt],
-                ["role": "user", "content": userPrompt]
+            "contents": [
+                [
+                    "role": "user",
+                    "parts": [
+                        ["text": combinedPrompt]
+                    ]
+                ]
             ],
-            "response_format": ["type": "json_object"],
-            "temperature": 0.4,
-            "stream": false
+            "generationConfig": [
+                "responseMimeType": "application/json",
+                "temperature": 0.3
+            ]
         ]
         
         guard let httpBody = try? JSONSerialization.data(withJSONObject: requestBody) else {
-            throw LLMError.invalidRequest("Failed to serialize DeepSeek payload")
+            throw LLMError.invalidRequest("Failed to serialize Gemini payload")
         }
         
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
-        urlRequest.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         urlRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.httpBody = httpBody
         urlRequest.timeoutInterval = 60
@@ -69,20 +81,21 @@ public final class DeepSeekService: LLMService, @unchecked Sendable {
         }
         
         guard (200...299).contains(httpResponse.statusCode) else {
-            let errorMsg = String(data: data, encoding: .utf8) ?? "Unknown server error"
+            let errorMsg = String(data: data, encoding: .utf8) ?? "HTTP \(httpResponse.statusCode)"
             throw LLMError.invalidResponse(statusCode: httpResponse.statusCode, message: errorMsg)
         }
         
-        // Parse OpenAI-compatible chat completion envelope
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let choices = json["choices"] as? [[String: Any]],
-              let firstChoice = choices.first,
-              let message = firstChoice["message"] as? [String: Any],
-              let contentString = message["content"] as? String else {
+              let candidates = json["candidates"] as? [[String: Any]],
+              let firstCandidate = candidates.first,
+              let content = firstCandidate["content"] as? [String: Any],
+              let parts = content["parts"] as? [[String: Any]],
+              let firstPart = parts.first,
+              let textContent = firstPart["text"] as? String else {
             throw LLMError.emptyResponse
         }
         
-        return try JSONSanitizer.decodeAnalysisResponse(from: contentString)
+        return try JSONSanitizer.decodeAnalysisResponse(from: textContent)
     }
     
     public func testConnection() async throws -> Bool {
@@ -90,23 +103,28 @@ public final class DeepSeekService: LLMService, @unchecked Sendable {
             throw LLMError.missingApiKey(provider: providerName)
         }
         
-        guard let url = URL(string: baseURLString) else {
+        let endpoint = "\(baseURLString)/models/\(modelName):generateContent?key=\(apiKey)"
+        guard let url = URL(string: endpoint) else {
             throw LLMError.invalidURL
         }
         
         let requestBody: [String: Any] = [
-            "model": modelName,
-            "messages": [
-                ["role": "system", "content": "You are a test helper. Reply with JSON {\"status\":\"ok\"}"],
-                ["role": "user", "content": "ping"]
+            "contents": [
+                [
+                    "role": "user",
+                    "parts": [
+                        ["text": "Ping. Respond with {\"status\":\"ok\"}"]
+                    ]
+                ]
             ],
-            "response_format": ["type": "json_object"],
-            "max_tokens": 20
+            "generationConfig": [
+                "responseMimeType": "application/json",
+                "maxOutputTokens": 20
+            ]
         ]
         
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
-        urlRequest.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         urlRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
         urlRequest.timeoutInterval = 15

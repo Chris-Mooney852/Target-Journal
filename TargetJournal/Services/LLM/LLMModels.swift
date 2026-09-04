@@ -77,9 +77,9 @@ public struct LLMGrammarPatternHighlight: Codable, Sendable {
 
 /// Errors occurring during LLM interaction.
 public enum LLMError: Error, LocalizedError {
-    case missingApiKey
+    case missingApiKey(provider: String = "AI")
     case invalidURL
-    case invalidRequest
+    case invalidRequest(String = "")
     case networkError(String)
     case invalidResponse(statusCode: Int, message: String)
     case decodingError(String)
@@ -87,12 +87,12 @@ public enum LLMError: Error, LocalizedError {
     
     public var errorDescription: String? {
         switch self {
-        case .missingApiKey:
-            return "DeepSeek API key is missing. Please add your key in Settings."
+        case .missingApiKey(let provider):
+            return "\(provider) API key is missing. Please add your key in Settings."
         case .invalidURL:
             return "The API endpoint URL is invalid."
-        case .invalidRequest:
-            return "Failed to construct the analysis request."
+        case .invalidRequest(let details):
+            return details.isEmpty ? "Failed to construct the analysis request." : "Invalid request: \(details)"
         case .networkError(let details):
             return "Network connection error: \(details)"
         case .invalidResponse(let statusCode, let message):

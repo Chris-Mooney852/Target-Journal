@@ -53,13 +53,21 @@ public struct SettingsView: View {
                 }
             }
             
-            // DeepSeek API Key
-            Section("DeepSeek AI Tutor API Key") {
-                SecureField("Enter API Key (sk-...)", text: $apiKey)
-                    .autocorrectionDisabled()
-                    #if os(iOS)
-                    .textInputAutocapitalization(.never)
-                    #endif
+            // AI Tutor & LLM Provider API Key
+            Section("\(userProfile.llmProvider.displayName) API Configuration") {
+                if userProfile.llmProvider.isAPIKeyRequired {
+                    SecureField(userProfile.llmProvider.apiKeyPlaceholder, text: $apiKey)
+                        .autocorrectionDisabled()
+                        #if os(iOS)
+                        .textInputAutocapitalization(.never)
+                        #endif
+                } else {
+                    TextField(userProfile.llmProvider.apiKeyPlaceholder, text: $apiKey)
+                        .autocorrectionDisabled()
+                        #if os(iOS)
+                        .textInputAutocapitalization(.never)
+                        #endif
+                }
                 
                 HStack {
                     Button(action: testConnection) {
@@ -70,7 +78,7 @@ public struct SettingsView: View {
                             Text("Test Connection")
                         }
                     }
-                    .disabled(apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isTestingKey)
+                    .disabled(isTestingKey || (userProfile.llmProvider.isAPIKeyRequired && apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
                     
                     Spacer()
                     
@@ -97,9 +105,9 @@ public struct SettingsView: View {
             Section("AI Engine") {
                 NavigationLink(destination: ModelConfigView(userProfile: userProfile)) {
                     HStack {
-                        Text("Model Settings")
+                        Label(userProfile.llmProvider.displayName, systemImage: userProfile.llmProvider.iconSystemName)
                         Spacer()
-                        Text("\(userProfile.preferredLLMProvider) (\(userProfile.deepSeekModel))")
+                        Text(userProfile.effectiveModel)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -146,19 +154,26 @@ public struct SettingsView: View {
             }
         }
         .onAppear {
-            if let storedKey = KeychainHelper.shared.getDeepSeekKey() {
-                apiKey = storedKey
-            }
+            loadKeyForCurrentProvider()
+        }
+        .onChange(of: userProfile.preferredLLMProvider) { _, _ in
+            loadKeyForCurrentProvider()
         }
         .onDisappear {
             saveSettings()
         }
     }
     
+    private func loadKeyForCurrentProvider() {
+        apiKey = KeychainHelper.shared.getKey(for: userProfile.llmProvider) ?? ""
+        testStatus = nil
+        isKeyValid = false
+    }
+    
     private func saveSettings() {
         let trimmedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         do {
-            try KeychainHelper.shared.saveDeepSeekKey(trimmedKey)
+            try KeychainHelper.shared.saveKey(trimmedKey, for: userProfile.llmProvider)
             try modelContext.save()
         } catch {
             print("[SettingsView] Failed to save settings: \(error)")
@@ -170,7 +185,13 @@ public struct SettingsView: View {
         isTestingKey = true
         testStatus = nil
         
-        let service = DeepSeekService(apiKeyProvider: { keyToTest })
+        let provider = userProfile.llmProvider
+        let service = LLMServiceRegistry.shared.service(
+            for: provider,
+            baseURL: userProfile.effectiveBaseURL,
+            model: userProfile.effectiveModel,
+            apiKey: keyToTest
+        )
         
         Task {
             do {
@@ -178,16 +199,16 @@ public struct SettingsView: View {
                 await MainActor.run {
                     self.isTestingKey = false
                     self.isKeyValid = success
-                    self.testStatus = "Valid Key ✓"
+                    self.testStatus = "Connected ✓"
                     if success {
-                        try? KeychainHelper.shared.saveDeepSeekKey(keyToTest)
+                        try? KeychainHelper.shared.saveKey(keyToTest, for: provider)
                     }
                 }
             } catch {
                 await MainActor.run {
                     self.isTestingKey = false
                     self.isKeyValid = false
-                    self.testStatus = "Invalid: \(error.localizedDescription)"
+                    self.testStatus = "Failed: \(error.localizedDescription)"
                 }
             }
         }

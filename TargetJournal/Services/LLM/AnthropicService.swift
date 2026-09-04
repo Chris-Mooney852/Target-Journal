@@ -1,9 +1,9 @@
 import Foundation
 
-/// DeepSeek API client implementation conforming to LLMService.
-public final class DeepSeekService: LLMService, @unchecked Sendable {
-    public let providerId: String = "deepseek"
-    public let providerName: String = "DeepSeek"
+/// Anthropic Claude API client conforming to LLMService.
+public final class AnthropicService: LLMService, @unchecked Sendable {
+    public let providerId: String = "anthropic"
+    public let providerName: String = "Anthropic"
     
     private let apiKeyProvider: @Sendable () -> String?
     private let baseURLString: String
@@ -11,10 +11,10 @@ public final class DeepSeekService: LLMService, @unchecked Sendable {
     private let urlSession: URLSession
     
     public init(
-        baseURLString: String = "https://api.deepseek.com/chat/completions",
-        modelName: String = "deepseek-chat",
+        baseURLString: String = "https://api.anthropic.com/v1/messages",
+        modelName: String = "claude-3-7-sonnet-20250219",
         urlSession: URLSession = .shared,
-        apiKeyProvider: @escaping @Sendable () -> String? = { KeychainHelper.shared.getDeepSeekKey() }
+        apiKeyProvider: @escaping @Sendable () -> String? = { KeychainHelper.shared.getKey(for: .anthropic) }
     ) {
         self.baseURLString = baseURLString
         self.modelName = modelName
@@ -32,26 +32,26 @@ public final class DeepSeekService: LLMService, @unchecked Sendable {
         }
         
         let systemPrompt = PromptBuilder.buildSystemPrompt(for: request)
-        let userPrompt = PromptBuilder.buildUserPrompt(for: request)
+        let userPrompt = PromptBuilder.buildUserPrompt(for: request) + "\n\nCRITICAL: Respond ONLY with valid, raw JSON matching the required schema. Do not include markdown codeblocks or extraneous commentary."
         
         let requestBody: [String: Any] = [
             "model": modelName,
+            "max_tokens": 4096,
+            "system": systemPrompt,
             "messages": [
-                ["role": "system", "content": systemPrompt],
                 ["role": "user", "content": userPrompt]
             ],
-            "response_format": ["type": "json_object"],
-            "temperature": 0.4,
-            "stream": false
+            "temperature": 0.3
         ]
         
         guard let httpBody = try? JSONSerialization.data(withJSONObject: requestBody) else {
-            throw LLMError.invalidRequest("Failed to serialize DeepSeek payload")
+            throw LLMError.invalidRequest("Failed to serialize Anthropic payload")
         }
         
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
-        urlRequest.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        urlRequest.addValue(apiKey, forHTTPHeaderField: "x-api-key")
+        urlRequest.addValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         urlRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.httpBody = httpBody
         urlRequest.timeoutInterval = 60
@@ -69,20 +69,18 @@ public final class DeepSeekService: LLMService, @unchecked Sendable {
         }
         
         guard (200...299).contains(httpResponse.statusCode) else {
-            let errorMsg = String(data: data, encoding: .utf8) ?? "Unknown server error"
+            let errorMsg = String(data: data, encoding: .utf8) ?? "HTTP \(httpResponse.statusCode)"
             throw LLMError.invalidResponse(statusCode: httpResponse.statusCode, message: errorMsg)
         }
         
-        // Parse OpenAI-compatible chat completion envelope
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let choices = json["choices"] as? [[String: Any]],
-              let firstChoice = choices.first,
-              let message = firstChoice["message"] as? [String: Any],
-              let contentString = message["content"] as? String else {
+              let contents = json["content"] as? [[String: Any]],
+              let firstBlock = contents.first(where: { ($0["type"] as? String) == "text" }),
+              let textContent = firstBlock["text"] as? String else {
             throw LLMError.emptyResponse
         }
         
-        return try JSONSanitizer.decodeAnalysisResponse(from: contentString)
+        return try JSONSanitizer.decodeAnalysisResponse(from: textContent)
     }
     
     public func testConnection() async throws -> Bool {
@@ -96,17 +94,16 @@ public final class DeepSeekService: LLMService, @unchecked Sendable {
         
         let requestBody: [String: Any] = [
             "model": modelName,
+            "max_tokens": 20,
             "messages": [
-                ["role": "system", "content": "You are a test helper. Reply with JSON {\"status\":\"ok\"}"],
-                ["role": "user", "content": "ping"]
-            ],
-            "response_format": ["type": "json_object"],
-            "max_tokens": 20
+                ["role": "user", "content": "Ping. Reply with {\"status\":\"ok\"} in JSON format."]
+            ]
         ]
         
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
-        urlRequest.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        urlRequest.addValue(apiKey, forHTTPHeaderField: "x-api-key")
+        urlRequest.addValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         urlRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
         urlRequest.timeoutInterval = 15

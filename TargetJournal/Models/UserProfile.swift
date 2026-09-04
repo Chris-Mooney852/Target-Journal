@@ -44,4 +44,33 @@ public final class UserProfile {
         get { HSKLevel(rawValue: currentHSKLevelRaw) ?? .hsk1 }
         set { currentHSKLevelRaw = newValue.rawValue }
     }
+    
+    public var llmProvider: LLMProvider {
+        get {
+            LLMProvider(rawValue: preferredLLMProvider) ?? .deepSeek
+        }
+        set {
+            preferredLLMProvider = newValue.rawValue
+            if !newValue.supportedModels.contains(deepSeekModel) {
+                deepSeekModel = newValue.defaultModel
+            }
+            if customBaseURL.isEmpty || customBaseURL == LLMProvider.deepSeek.defaultBaseURL {
+                customBaseURL = newValue.defaultBaseURL
+            }
+        }
+    }
+    
+    public var effectiveModel: String {
+        if !deepSeekModel.isEmpty {
+            return deepSeekModel
+        }
+        return llmProvider.defaultModel
+    }
+    
+    public var effectiveBaseURL: String {
+        if !customBaseURL.isEmpty {
+            return customBaseURL
+        }
+        return llmProvider.defaultBaseURL
+    }
 }

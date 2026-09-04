@@ -1,9 +1,9 @@
 import Foundation
 
-/// DeepSeek API client implementation conforming to LLMService.
-public final class DeepSeekService: LLMService, @unchecked Sendable {
-    public let providerId: String = "deepseek"
-    public let providerName: String = "DeepSeek"
+/// OpenAI API client conforming to LLMService.
+public final class OpenAIService: LLMService, @unchecked Sendable {
+    public let providerId: String = "openai"
+    public let providerName: String = "OpenAI"
     
     private let apiKeyProvider: @Sendable () -> String?
     private let baseURLString: String
@@ -11,10 +11,10 @@ public final class DeepSeekService: LLMService, @unchecked Sendable {
     private let urlSession: URLSession
     
     public init(
-        baseURLString: String = "https://api.deepseek.com/chat/completions",
-        modelName: String = "deepseek-chat",
+        baseURLString: String = "https://api.openai.com/v1/chat/completions",
+        modelName: String = "gpt-4o",
         urlSession: URLSession = .shared,
-        apiKeyProvider: @escaping @Sendable () -> String? = { KeychainHelper.shared.getDeepSeekKey() }
+        apiKeyProvider: @escaping @Sendable () -> String? = { KeychainHelper.shared.getKey(for: .openAI) }
     ) {
         self.baseURLString = baseURLString
         self.modelName = modelName
@@ -34,19 +34,23 @@ public final class DeepSeekService: LLMService, @unchecked Sendable {
         let systemPrompt = PromptBuilder.buildSystemPrompt(for: request)
         let userPrompt = PromptBuilder.buildUserPrompt(for: request)
         
-        let requestBody: [String: Any] = [
+        var requestBody: [String: Any] = [
             "model": modelName,
             "messages": [
                 ["role": "system", "content": systemPrompt],
                 ["role": "user", "content": userPrompt]
             ],
-            "response_format": ["type": "json_object"],
-            "temperature": 0.4,
-            "stream": false
+            "response_format": ["type": "json_object"]
         ]
         
+        // Reasoning models (o1, o3-mini) do not accept custom temperature
+        let isReasoningModel = modelName.hasPrefix("o1") || modelName.hasPrefix("o3")
+        if !isReasoningModel {
+            requestBody["temperature"] = 0.3
+        }
+        
         guard let httpBody = try? JSONSerialization.data(withJSONObject: requestBody) else {
-            throw LLMError.invalidRequest("Failed to serialize DeepSeek payload")
+            throw LLMError.invalidRequest("Failed to serialize OpenAI payload")
         }
         
         var urlRequest = URLRequest(url: url)
@@ -69,11 +73,10 @@ public final class DeepSeekService: LLMService, @unchecked Sendable {
         }
         
         guard (200...299).contains(httpResponse.statusCode) else {
-            let errorMsg = String(data: data, encoding: .utf8) ?? "Unknown server error"
+            let errorMsg = String(data: data, encoding: .utf8) ?? "HTTP \(httpResponse.statusCode)"
             throw LLMError.invalidResponse(statusCode: httpResponse.statusCode, message: errorMsg)
         }
         
-        // Parse OpenAI-compatible chat completion envelope
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let choices = json["choices"] as? [[String: Any]],
               let firstChoice = choices.first,
@@ -94,15 +97,22 @@ public final class DeepSeekService: LLMService, @unchecked Sendable {
             throw LLMError.invalidURL
         }
         
-        let requestBody: [String: Any] = [
+        let isReasoningModel = modelName.hasPrefix("o1") || modelName.hasPrefix("o3")
+        var requestBody: [String: Any] = [
             "model": modelName,
             "messages": [
-                ["role": "system", "content": "You are a test helper. Reply with JSON {\"status\":\"ok\"}"],
+                ["role": "system", "content": "You are a test assistant. Reply with JSON {\"status\":\"ok\"}"],
                 ["role": "user", "content": "ping"]
             ],
-            "response_format": ["type": "json_object"],
-            "max_tokens": 20
+            "response_format": ["type": "json_object"]
         ]
+        
+        if isReasoningModel {
+            requestBody["max_completion_tokens"] = 25
+        } else {
+            requestBody["max_tokens"] = 25
+            requestBody["temperature"] = 0.0
+        }
         
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"

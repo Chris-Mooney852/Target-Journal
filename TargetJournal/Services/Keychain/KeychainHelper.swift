@@ -14,24 +14,38 @@ public final class KeychainHelper: Sendable {
     
     private init() {}
     
-    public func saveDeepSeekKey(_ key: String) throws {
+    // MARK: - LLM Provider Keys
+    public func saveKey(_ key: String, for provider: LLMProvider) throws {
         let trimmed = key.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty {
-            try deleteDeepSeekKey()
+            try deleteKey(for: provider)
         } else {
-            try save(key: deepSeekKeyAccount, data: Data(trimmed.utf8))
+            try save(key: provider.keychainAccountKey, data: Data(trimmed.utf8))
         }
     }
     
-    public func getDeepSeekKey() -> String? {
-        guard let data = get(key: deepSeekKeyAccount) else { return nil }
+    public func getKey(for provider: LLMProvider) -> String? {
+        guard let data = get(key: provider.keychainAccountKey) else { return nil }
         guard let keyString = String(data: data, encoding: .utf8) else { return nil }
         let trimmed = keyString.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
     }
     
+    public func deleteKey(for provider: LLMProvider) throws {
+        try delete(key: provider.keychainAccountKey)
+    }
+    
+    // MARK: - DeepSeek Compatibility
+    public func saveDeepSeekKey(_ key: String) throws {
+        try saveKey(key, for: .deepSeek)
+    }
+    
+    public func getDeepSeekKey() -> String? {
+        return getKey(for: .deepSeek)
+    }
+    
     public func deleteDeepSeekKey() throws {
-        try delete(key: deepSeekKeyAccount)
+        try deleteKey(for: .deepSeek)
     }
     
     // Generic Keychain operations

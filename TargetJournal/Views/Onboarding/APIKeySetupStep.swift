@@ -1,6 +1,7 @@
 import SwiftUI
 
 public struct APIKeySetupStep: View {
+    @Binding var selectedProvider: LLMProvider
     @Binding var apiKey: String
     @Binding var isValidated: Bool
     
@@ -8,42 +9,82 @@ public struct APIKeySetupStep: View {
     @State private var testStatus: String?
     @State private var isSuccess: Bool = false
     
-    public init(apiKey: Binding<String>, isValidated: Binding<Bool>) {
+    public init(selectedProvider: Binding<LLMProvider>, apiKey: Binding<String>, isValidated: Binding<Bool>) {
+        self._selectedProvider = selectedProvider
         self._apiKey = apiKey
         self._isValidated = isValidated
     }
     
     public var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("AI Tutor Setup (DeepSeek)")
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("AI Language Tutor")
                     .font(.title2)
                     .fontWeight(.bold)
                 
-                Text("Enter your DeepSeek API Key to unlock automated grammar corrections, vocabulary suggestions, and natural phrasing tips.")
+                Text("Select your preferred AI provider to power grammar corrections, vocabulary suggestions, and native phrasing feedback.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
             
-            VStack(alignment: .leading, spacing: 8) {
-                Text("DeepSeek API Key")
+            VStack(alignment: .leading, spacing: 6) {
+                Text("AI Provider")
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundStyle(.secondary)
                 
-                SecureField("sk-...", text: $apiKey)
-                    .font(.system(.body, design: .monospaced))
-                    .padding(12)
-                    #if os(iOS)
-                    .background(Color(.secondarySystemGroupedBackground))
-                    #else
-                    .background(Color(.controlBackgroundColor))
-                    #endif
-                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                    .autocorrectionDisabled()
-                    #if os(iOS)
-                    .textInputAutocapitalization(.never)
-                    #endif
+                Picker("Provider", selection: $selectedProvider) {
+                    ForEach(LLMProvider.allCases) { provider in
+                        Label(provider.displayName, systemImage: provider.iconSystemName)
+                            .tag(provider)
+                    }
+                }
+                .pickerStyle(.menu)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                #if os(iOS)
+                .background(Color(.secondarySystemGroupedBackground))
+                #else
+                .background(Color(.controlBackgroundColor))
+                #endif
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            }
+            
+            VStack(alignment: .leading, spacing: 6) {
+                Text("\(selectedProvider.displayName) API Key")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
+                
+                if selectedProvider.isAPIKeyRequired {
+                    SecureField(selectedProvider.apiKeyPlaceholder, text: $apiKey)
+                        .font(.system(.body, design: .monospaced))
+                        .padding(12)
+                        #if os(iOS)
+                        .background(Color(.secondarySystemGroupedBackground))
+                        #else
+                        .background(Color(.controlBackgroundColor))
+                        #endif
+                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .autocorrectionDisabled()
+                        #if os(iOS)
+                        .textInputAutocapitalization(.never)
+                        #endif
+                } else {
+                    TextField(selectedProvider.apiKeyPlaceholder, text: $apiKey)
+                        .font(.system(.body, design: .monospaced))
+                        .padding(12)
+                        #if os(iOS)
+                        .background(Color(.secondarySystemGroupedBackground))
+                        #else
+                        .background(Color(.controlBackgroundColor))
+                        #endif
+                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .autocorrectionDisabled()
+                        #if os(iOS)
+                        .textInputAutocapitalization(.never)
+                        #endif
+                }
             }
             
             HStack {
@@ -59,7 +100,7 @@ public struct APIKeySetupStep: View {
                     }
                 }
                 .buttonStyle(.bordered)
-                .disabled(apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isTesting)
+                .disabled(isTesting || (selectedProvider.isAPIKeyRequired && apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
                 
                 Spacer()
                 
@@ -77,11 +118,17 @@ public struct APIKeySetupStep: View {
             StatusBanner(
                 icon: "lock.shield.fill",
                 title: "100% Private & Local",
-                message: "Your API key is securely stored in your device's Apple Keychain and sent directly to DeepSeek over HTTPS. You can also skip this and enter it later in Settings.",
+                message: "Your API key is securely stored in Apple Keychain and sent directly to \(selectedProvider.displayName) over encrypted HTTPS.",
                 color: .indigo
             )
             
             Spacer()
+        }
+        .onChange(of: selectedProvider) { _, newProvider in
+            apiKey = KeychainHelper.shared.getKey(for: newProvider) ?? ""
+            testStatus = nil
+            isSuccess = false
+            isValidated = false
         }
     }
     
@@ -90,7 +137,8 @@ public struct APIKeySetupStep: View {
         isTesting = true
         testStatus = nil
         
-        let service = DeepSeekService(apiKeyProvider: { keyToTest })
+        let provider = selectedProvider
+        let service = LLMServiceRegistry.shared.service(for: provider, apiKey: keyToTest)
         
         Task {
             do {
@@ -101,7 +149,7 @@ public struct APIKeySetupStep: View {
                     self.isValidated = success
                     self.testStatus = "Connected successfully!"
                     if success {
-                        try? KeychainHelper.shared.saveDeepSeekKey(keyToTest)
+                        try? KeychainHelper.shared.saveKey(keyToTest, for: provider)
                     }
                 }
             } catch {
